@@ -2,7 +2,7 @@
 
 section .data
     bskey equ 0x7F
-    lencadena equ 20
+    lencadena equ 255
     ln equ 0x0A
     nulo db 0
     nline db ln,0
