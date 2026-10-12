@@ -2,7 +2,7 @@
 
 section .data
     bskey equ 0x7F
-    lencadena equ 20
+    lencadena equ 255
     ln equ 0x0A
     nulo db 0
     nline db ln,0
@@ -21,11 +21,22 @@ _start:
     mov edx, msg1        
     call puts
 
-    mov ecx, lencadena
-        .cicloCaptura call captura    
+    mov edi, cadena
+    mov ecx, lencadena-1
+    call capturaCadena
 
-        loop .cicloCaptura
+    mov edx, cadena
+    call puts
 
+    mov edi, cadena
+    call mayusculas
+    mov edx, cadena
+    call puts
+
+    mov edi, cadena
+    call minusculas
+    mov edx, cadena
+    call puts
 
     jmp .fin_programa  
     
@@ -40,6 +51,17 @@ _start:
 	    xor ebx, ebx          ; return 0
         int 0x80              ; Fin de programa
 
+
+    capturaCadena:
+        .cicloCaptura call captura    
+            cmp ebx, 1
+            jne .ciclo
+            mov ecx, 1
+            mov byte [edi], 0
+        .ciclo: 
+            loop .cicloCaptura
+            ret
+
    
     captura:
             push ax
@@ -47,13 +69,14 @@ _start:
             cmp al, ln
             jne .finEsln
             mov ebx, 1
-
-
+    .finEsln:        
             cmp al, bskey
             jne .sig
             call borrar
     .sig:   
             call putchar
+            mov byte[edi], al
+            add edi, 1
             pop ax
             ret
 
@@ -67,3 +90,39 @@ _start:
         call putchar   
         pop ax
         ret 
+
+    mayusculas:
+        
+        .cicloMayus:
+            cmp byte[edi], 0
+            je .finMayus 
+            cmp byte[edi], 97
+            jl .noEsMinus
+            cmp byte[edi], 122
+            jg .noEsMinus
+            add byte[edi], -32
+
+        .noEsMinus:
+            add edi, 1
+            jmp .cicloMayus
+
+        .finMayus:
+            ret
+
+    minusculas:
+        
+        .cicloMinus:
+            cmp byte[edi], 0
+            je .finMinus 
+            cmp byte[edi], 65
+            jl .noEsMayus
+            cmp byte[edi], 90
+            jg .noEsMayus
+            add byte[edi], 32
+
+        .noEsMayus:
+            add edi, 1
+            jmp .cicloMinus
+
+        .finMinus:
+            ret
