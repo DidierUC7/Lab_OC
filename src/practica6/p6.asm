@@ -2,7 +2,7 @@
 
 section .data
     bskey equ 0x7F
-    lencadena equ 255
+    lencadena equ 20
     ln equ 0x0A
     nulo db 0
     nline db ln,0
@@ -24,18 +24,26 @@ _start:
     mov edi, cadena
     mov ecx, lencadena-1
     call capturaCadena
+    mov edx, nline
+    call puts
 
     mov edx, cadena
+    call puts
+    mov edx, nline
     call puts
 
     mov edi, cadena
     call mayusculas
     mov edx, cadena
     call puts
+    mov edx, nline
+    call puts
 
     mov edi, cadena
     call minusculas
     mov edx, cadena
+    call puts
+    mov edx, nline
     call puts
 
     jmp .fin_programa  
@@ -57,9 +65,10 @@ _start:
             cmp ebx, 1
             jne .ciclo
             mov ecx, 1
-            mov byte [edi], 0
+            mov byte [edi-1], 0
         .ciclo: 
             loop .cicloCaptura
+            mov byte [edi], 0
             ret
 
    
