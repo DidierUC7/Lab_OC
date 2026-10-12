@@ -61,6 +61,8 @@ _start:
 
 
     capturaCadena:
+        push ebx
+        mov ebx, 0
         .cicloCaptura call captura    
             cmp ebx, 1
             jne .ciclo
@@ -69,6 +71,7 @@ _start:
         .ciclo: 
             loop .cicloCaptura
             mov byte [edi], 0
+            pop ebx
             ret
 
    
@@ -82,23 +85,30 @@ _start:
             cmp al, bskey
             jne .sig
             call borrar
+            jmp .finBorrar
     .sig:   
             call putchar
             mov byte[edi], al
             add edi, 1
+    .finBorrar:
             pop ax
             ret
 
     borrar:
-        push ax 
+        push ax
+        inc ecx
+        cmp edi, cadena
+        jle .esCadenaOriginal
+        sub edi, 1
         mov al,0x8
-        call putchar    
+        call putchar
         mov al,' '
         call putchar
         mov al,0x8
         call putchar   
-        pop ax
-        ret 
+        .esCadenaOriginal: 
+            pop ax
+            ret 
 
     mayusculas:
         
