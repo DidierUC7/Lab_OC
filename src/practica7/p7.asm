@@ -218,12 +218,12 @@ _start:
     potencia:
         push ecx
         push edx
-        mov eax, 1              ; base^0 = 1
-        mov ecx, edx            ; contador propio
+        mov eax, 1             
+        mov ecx, edx            
         .cicloPotencia:
             test ecx, ecx
             jz .finPotencia
-            mul ebx             ; edx:eax = eax * ebx (edx se pisa, pero ya está guardado)
+            mul ebx             
             dec ecx
             jmp .cicloPotencia
         .finPotencia:
