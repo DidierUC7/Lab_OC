@@ -11,22 +11,64 @@ section .data
     
 section .bss
     cadena resb lencadena
-    numero resb 8
+    cadenaNumero resb lencadena
+    numeroAtoi resb 4
+    numeroItoa resb 4
+    cadenaNumeroItoa resb lencadena
+    cantNumero resb 4
+    signo resb 4
+    bandera0 resb 1
 
 section .text
     global _start         ; referencia para inicio de programa
     
 _start:   
 
+    mov edx, msg1
+    call puts
     mov edi, cadena
-    mov cx, lencadena
+    mov esi, cadenaNumero
+    mov cx, lencadena-1
 
     call capturaCadena
 
+    mov byte[cantNumero], 0
+    mov edi, cadena
+    mov esi, cadenaNumero
+    call atoi
+
+    mov edx, nline
+    call puts
+
+    mov edx, cadenaNumero
+    call puts
+
+    mov edx, nline
+    call puts
+
+    add byte[cantNumero], '0'
+    mov al, byte[cantNumero]
+    call putchar
+
+    mov edx, nline
+    call puts
+
+    mov edx, numeroAtoi
+    call puts
+
+    mov edx, dword[numeroAtoi]
+    mov dword[numeroItoa], edx 
 
 
-    
-    
+    mov edx, nline
+    call puts
+
+    mov byte[bandera0], 1
+    call itoa
+    mov edx, cadenaNumeroItoa
+    call puts
+
+
     
     ; --- FIN DE PROGRAMA ---
     .fin_programa: 
@@ -50,14 +92,15 @@ _start:
 
         .cicloCapturaCadena:
             call capturaCaracter
-            add edi, 1
-            sub cx, 1
 
             cmp bx, 0
-            jz .cicloCapturaCadena
-        
-        pop bx
-        ret
+            jnz .finCicloCapturaCadena
+            loop .cicloCapturaCadena
+
+        .finCicloCapturaCadena:
+            mov byte[edi], 0
+            pop bx
+            ret
 
 
 
@@ -67,14 +110,160 @@ _start:
         push ax
         
         call getch
-        cmp al, 10
-        jnz .noEsln
-        mov bx, 1
+        cmp al, bskey
+        jnz .noEsBackSpace
+        call borrar
         jmp .finCapturaCaracter
+        .noEsBackSpace:
+            cmp al, 10
+            jnz .noEsln
+            mov bx, 1
+            jmp .finCapturaCaracter
+            cmp al, 0
+
         .noEsln:
             mov byte[edi], al
+            add edi, 1
             call putchar
         
         .finCapturaCaracter:
             pop ax
             ret
+
+    ; --- borrar ---
+    borrar:
+        push ax
+        inc cx
+        cmp edi, cadena
+        jle .finalBorrar
+        sub edi, 1
+        inc cx
+        mov al, 8
+        call putchar
+        mov al, " "
+        call putchar
+        mov al, 8
+        call putchar
+        .finalBorrar:
+            pop ax
+            ret
+
+
+    ; --- atoi ---
+    atoi:
+        mov dword[signo], 1
+        .cicloInicioAtoi:
+            cmp byte[edi], 0
+            jz .finAtoi
+            call verificarEsNumero
+            cmp bx, 1
+            jz .signo
+            inc edi
+            jmp .cicloInicioAtoi
+            .signo cmp byte[edi-1], '-'
+                jnz .cicloNumero
+                mov dword[signo], -1
+            .cicloNumero:
+                call verificarEsNumero
+                cmp bx, 1
+                jnz .conversionAtoi
+                mov byte[esi], al
+                inc edi
+                inc esi
+                inc byte[cantNumero]
+                jmp .cicloNumero
+                
+            .conversionAtoi:
+                mov byte[esi+1], 0
+                mov esi, cadenaNumero
+                mov edi, numeroAtoi
+                mov dword[edi], 0
+                mov ecx, 0
+                mov cl, byte[cantNumero]
+                .cicloConversionAtoi:
+                    mov ebx, 10
+                    mov edx, ecx
+                    dec edx
+                    call potencia
+                    mov ebx, eax
+                    mov eax, 0
+                    mov al, byte[esi]
+                    sub eax, '0'
+                    mul ebx
+                    add dword[edi], eax
+                    inc esi
+                    loop .cicloConversionAtoi
+        
+            .finAtoi:
+                mov eax, dword[edi]
+                imul dword[signo]
+                mov dword[edi], eax
+            ret
+        
+        
+    verificarEsNumero:
+        cmp byte[edi], '0'
+        jl .noEsNumero
+        cmp byte[edi], '9'
+        jg .noEsNumero
+        mov ebx, 1
+        mov al, byte[edi]
+        jmp .finVerificarEsNumero
+        .noEsNumero:
+            mov ebx, 0
+        .finVerificarEsNumero ret
+
+
+    ; --- potencia ---
+    potencia:
+        push ecx
+        push edx
+        mov eax, 1              ; base^0 = 1
+        mov ecx, edx            ; contador propio
+        .cicloPotencia:
+            test ecx, ecx
+            jz .finPotencia
+            mul ebx             ; edx:eax = eax * ebx (edx se pisa, pero ya está guardado)
+            dec ecx
+            jmp .cicloPotencia
+        .finPotencia:
+            pop edx
+            pop ecx
+            ret
+
+    
+    ; --- itoa ---
+    itoa:
+        mov ebx, dword[numeroItoa]
+        mov edi, cadenaNumeroItoa
+        cmp ebx, 0
+        jge .NoEsNeg
+        mov byte[edi], '-'
+        inc edi
+        neg ebx
+        .NoEsNeg mov ax, bx
+        shr ebx, 16
+        mov dx, bx
+        mov ebx, 10000
+        .cicloItoa:
+            div bx
+            cmp byte[bandera0], 0
+            jz .esPermitidoXd
+            cmp al, 0
+            jz .es0malo
+            .esPermitidoXd mov byte[edi], al
+            add byte[edi], '0'
+            inc edi
+            mov byte[bandera0], 0
+            .es0malo mov ax, 0
+            push dx
+            mov dx, 0
+            mov ax, bx
+            mov bx, 10
+            div bx
+            mov bx, ax
+            pop ax
+            cmp bx, 0
+            jnz .cicloItoa
+        
+        ret
