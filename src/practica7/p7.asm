@@ -35,7 +35,7 @@ _start:
     mov byte[cantNumero], 0
     mov edi, cadena
     mov esi, cadenaNumero
-    call atoi
+    call atoi ;;
 
     mov edx, nline
     call puts
@@ -59,12 +59,14 @@ _start:
     mov edx, dword[numeroAtoi]
     mov dword[numeroItoa], edx 
 
+    add dword[numeroItoa], 55
 
     mov edx, nline
     call puts
 
+
     mov byte[bandera0], 1
-    call itoa
+    call itoa  ;;
     mov edx, cadenaNumeroItoa
     call puts
 
